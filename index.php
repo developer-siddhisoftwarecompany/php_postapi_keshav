@@ -20,12 +20,12 @@ $method = $_SERVER["REQUEST_METHOD"];
 $action = $_GET["action"] ?? "";
 
 // ======================================================
-// 0️⃣ DEFAULT PAGE – SHOW HTML FORMS
+// HOMEPAGE — MODERN UI
 // ======================================================
-<?php
-// ==== HOME PAGE MODERN UI ====
 if ($method === "GET" && $action === "") {
-?>
+
+    // IMPORTANT: CLOSE PHP BEFORE HTML ▼▼▼
+    ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,9 +38,7 @@ if ($method === "GET" && $action === "") {
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
   <style>
-      body {
-          background: #f5f7fb;
-      }
+      body { background: #f5f7fb; }
       .card {
           border: none;
           border-radius: 14px;
@@ -58,9 +56,7 @@ if ($method === "GET" && $action === "") {
           color: #fff;
           font-weight: 600;
       }
-      .btn-main:hover {
-          background: #2d54cc;
-      }
+      .btn-main:hover { background: #2d54cc; }
   </style>
 </head>
 <body>
@@ -110,7 +106,6 @@ if ($method === "GET" && $action === "") {
             </div>
         </div>
 
-
         <!-- DELETE CARD -->
         <div class="col-lg-6">
             <div class="card p-4">
@@ -145,160 +140,107 @@ if ($method === "GET" && $action === "") {
 </body>
 </html>
 <?php
+// IMPORTANT: EXIT TO AVOID RUNNING API CODE
 exit;
 }
-?>
 
+// ======================================================
+// API ROUTES (JSON OUTPUT ONLY)
+// ======================================================
 
-// From here on, everything is JSON API
 header("Content-Type: application/json");
 
-// ======================================================
-// 1️⃣ CREATE (POST)
-// ======================================================
+// CREATE
 if ($method === "POST" && $action === "create") {
-    $id    = $_POST["id"]   ?? "";
+    $id    = $_POST["id"] ?? "";
     $name  = $_POST["name"] ?? "";
     $phone = $_POST["phone"] ?? "";
 
-    if (!$id) {
-        echo json_encode(["error" => "ID is required"]);
-        exit;
-    }
-    if (!$name || trim($name) === "") {
-        echo json_encode(["error" => "Name cannot be empty"]);
-        exit;
-    }
-    if (strlen($phone) < 10) {
-        echo json_encode(["error" => "Phone must be at least 10 digits"]);
-        exit;
-    }
+    if (!$id) { echo json_encode(["error"=>"ID required"]); exit; }
+    if (!$name) { echo json_encode(["error"=>"Name required"]); exit; }
+    if (strlen($phone) < 10) { echo json_encode(["error"=>"Phone too short"]); exit; }
 
     $data = readData($dataFile);
-    foreach ($data as $item) {
-        if ($item["id"] == $id) {
-            echo json_encode(["error" => "ID already exists"]);
+    foreach ($data as $d) {
+        if ($d["id"] == $id) {
+            echo json_encode(["error"=>"ID already exists"]);
             exit;
         }
     }
-
-    $data[] = ["id" => $id, "name" => $name, "phone" => $phone];
+    $data[] = ["id"=>$id, "name"=>$name, "phone"=>$phone];
     saveData($dataFile, $data);
 
-    echo json_encode(["success" => true, "message" => "Data saved"]);
+    echo json_encode(["success"=>true]);
     exit;
 }
 
-// ======================================================
-// 2️⃣ UPDATE (POST)
-// ======================================================
+// UPDATE
 if ($method === "POST" && $action === "update") {
-    $id    = $_POST["id"]   ?? "";
-    $name  = $_POST["name"] ?? null;
-    $phone = $_POST["phone"] ?? null;
-
-    if (!$id) {
-        echo json_encode(["error" => "ID required"]);
-        exit;
-    }
+    $id = $_POST["id"] ?? "";
+    if (!$id) { echo json_encode(["error"=>"ID required"]); exit; }
 
     $data = readData($dataFile);
     $found = false;
 
-    foreach ($data as &$item) {
-        if ($item["id"] == $id) {
+    foreach ($data as &$d) {
+        if ($d["id"] == $id) {
             $found = true;
 
-            if ($name !== null) {
-                if (trim($name) === "") {
-                    echo json_encode(["error" => "Name cannot be empty"]);
-                    exit;
-                }
-                $item["name"] = $name;
+            if (isset($_POST["name"]) && $_POST["name"] !== "") {
+                $d["name"] = $_POST["name"];
             }
-
-            if ($phone !== null) {
-                if (strlen($phone) < 10) {
-                    echo json_encode(["error" => "Phone must be at least 10 digits"]);
-                    exit;
-                }
-                $item["phone"] = $phone;
+            if (isset($_POST["phone"]) && strlen($_POST["phone"]) >= 10) {
+                $d["phone"] = $_POST["phone"];
             }
         }
     }
 
-    if (!$found) {
-        echo json_encode(["error" => "ID does not exist"]);
-        exit;
-    }
+    if (!$found) { echo json_encode(["error"=>"ID not found"]); exit; }
 
     saveData($dataFile, $data);
-    echo json_encode(["success" => true, "message" => "Updated successfully"]);
+    echo json_encode(["success"=>true]);
     exit;
 }
 
-// ======================================================
-// 3️⃣ DELETE (POST)
-// ======================================================
+// DELETE
 if ($method === "POST" && $action === "delete") {
     $id = $_POST["id"] ?? "";
-
-    if (!$id) {
-        echo json_encode(["error" => "ID required"]);
-        exit;
-    }
+    if (!$id) { echo json_encode(["error"=>"ID required"]); exit; }
 
     $data = readData($dataFile);
-    $newData = [];
+    $new = [];
     $deleted = false;
 
-    foreach ($data as $item) {
-        if ($item["id"] == $id) {
+    foreach ($data as $d) {
+        if ($d["id"] == $id) {
             $deleted = true;
             continue;
         }
-        $newData[] = $item;
+        $new[] = $d;
     }
 
-    if (!$deleted) {
-        echo json_encode(["error" => "ID does not exist"]);
-        exit;
-    }
+    if (!$deleted) { echo json_encode(["error"=>"ID not found"]); exit; }
 
-    saveData($dataFile, $newData);
-    echo json_encode(["success" => true, "message" => "Deleted successfully"]);
+    saveData($dataFile, $new);
+    echo json_encode(["success"=>true]);
     exit;
 }
 
-// ======================================================
-// 4️⃣ IMAGE UPLOAD (POST)
-// ======================================================
+// IMAGE UPLOAD
 if ($method === "POST" && $action === "upload-image") {
-
     if (!isset($_FILES["image"])) {
-        echo json_encode(["error" => "Image is required"]);
+        echo json_encode(["error"=>"Image required"]);
         exit;
     }
 
-    if (!file_exists("uploads")) {
-        mkdir("uploads");
-    }
+    if (!file_exists("uploads")) mkdir("uploads");
 
-    $fileName = time() . "_" . basename($_FILES["image"]["name"]);
-    $target   = "uploads/" . $fileName;
+    $file = "uploads/" . time() . "_" . basename($_FILES["image"]["name"]);
+    move_uploaded_file($_FILES["image"]["tmp_name"], $file);
 
-    if (move_uploaded_file($_FILES["image"]["tmp_name"], $target)) {
-        echo json_encode([
-            "success"  => true,
-            "message"  => "Image uploaded successfully",
-            "file_url" => $target
-        ]);
-    } else {
-        echo json_encode(["error" => "Failed to upload"]);
-    }
+    echo json_encode(["success"=>true, "file"=>$file]);
     exit;
 }
 
-// If nothing matched:
-echo json_encode(["error" => "Invalid route"]);
+echo json_encode(["error"=>"Invalid route"]);
 ?>
