@@ -3,7 +3,7 @@
 // ======================================================
 // CONFIG — USE RENDER WRITABLE DIRECTORY
 // ======================================================
-$dataDir = "/var/www/storage/";
+$dataDir = "/var/www/html/storage/";
 $dataFile = $dataDir . "data.json";
 $uploadDir = $dataDir . "uploads/";
 
@@ -21,7 +21,6 @@ if (!file_exists($uploadDir)) {
 if (!file_exists($dataFile)) {
     file_put_contents($dataFile, json_encode([]));
 }
-
 // ======================================================
 // HELPERS
 // ======================================================
