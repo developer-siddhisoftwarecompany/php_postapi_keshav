@@ -1,17 +1,34 @@
 <?php
 
-// Path to JSON "database"
-$dataFile = "data.json";
+// ======================================================
+// CONFIG — USE RENDER WRITABLE DIRECTORY
+// ======================================================
+$dataDir = "/var/www/storage/";
+$dataFile = $dataDir . "data.json";
+$uploadDir = $dataDir . "uploads/";
 
-// Ensure JSON file exists
+// Create storage folder if missing
+if (!file_exists($dataDir)) {
+    mkdir($dataDir, 0777, true);
+}
+
+// Create uploads folder if missing
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+}
+
+// Create data.json if missing
 if (!file_exists($dataFile)) {
     file_put_contents($dataFile, json_encode([]));
 }
 
-// Helpers
+// ======================================================
+// HELPERS
+// ======================================================
 function readData($file) {
     return json_decode(file_get_contents($file), true);
 }
+
 function saveData($file, $data) {
     file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
 }
@@ -19,13 +36,12 @@ function saveData($file, $data) {
 $method = $_SERVER["REQUEST_METHOD"];
 $action = $_GET["action"] ?? "";
 
+
 // ======================================================
-// HOMEPAGE — MODERN UI
+// MODERN UI — HOMEPAGE
 // ======================================================
 if ($method === "GET" && $action === "") {
-
-    // IMPORTANT: CLOSE PHP BEFORE HTML ▼▼▼
-    ?>
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -34,7 +50,7 @@ if ($method === "GET" && $action === "") {
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Icons -->
+  <!-- FontAwesome Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
   <style>
@@ -56,7 +72,6 @@ if ($method === "GET" && $action === "") {
           color: #fff;
           font-weight: 600;
       }
-      .btn-main:hover { background: #2d54cc; }
   </style>
 </head>
 <body>
@@ -66,7 +81,7 @@ if ($method === "GET" && $action === "") {
 
     <div class="row g-4">
 
-        <!-- CREATE CARD -->
+        <!-- CREATE -->
         <div class="col-lg-6">
             <div class="card p-4">
                 <h4><i class="fa fa-plus-circle text-primary"></i> Create Data</h4>
@@ -86,7 +101,7 @@ if ($method === "GET" && $action === "") {
             </div>
         </div>
 
-        <!-- UPDATE CARD -->
+        <!-- UPDATE -->
         <div class="col-lg-6">
             <div class="card p-4">
                 <h4><i class="fa fa-edit text-warning"></i> Update Data</h4>
@@ -106,7 +121,7 @@ if ($method === "GET" && $action === "") {
             </div>
         </div>
 
-        <!-- DELETE CARD -->
+        <!-- DELETE -->
         <div class="col-lg-6">
             <div class="card p-4">
                 <h4><i class="fa fa-trash text-danger"></i> Delete Data</h4>
@@ -120,7 +135,7 @@ if ($method === "GET" && $action === "") {
             </div>
         </div>
 
-        <!-- UPLOAD IMAGE CARD -->
+        <!-- UPLOAD -->
         <div class="col-lg-6">
             <div class="card p-4">
                 <h4><i class="fa fa-upload text-success"></i> Upload Image</h4>
@@ -140,12 +155,11 @@ if ($method === "GET" && $action === "") {
 </body>
 </html>
 <?php
-// IMPORTANT: EXIT TO AVOID RUNNING API CODE
 exit;
 }
 
 // ======================================================
-// API ROUTES (JSON OUTPUT ONLY)
+// API — JSON LOGIC
 // ======================================================
 
 header("Content-Type: application/json");
@@ -161,12 +175,14 @@ if ($method === "POST" && $action === "create") {
     if (strlen($phone) < 10) { echo json_encode(["error"=>"Phone too short"]); exit; }
 
     $data = readData($dataFile);
+
     foreach ($data as $d) {
-        if ($d["id"] == $id) {
+        if ($d["id"] === $id) {
             echo json_encode(["error"=>"ID already exists"]);
             exit;
         }
     }
+
     $data[] = ["id"=>$id, "name"=>$name, "phone"=>$phone];
     saveData($dataFile, $data);
 
@@ -177,25 +193,29 @@ if ($method === "POST" && $action === "create") {
 // UPDATE
 if ($method === "POST" && $action === "update") {
     $id = $_POST["id"] ?? "";
+
     if (!$id) { echo json_encode(["error"=>"ID required"]); exit; }
 
     $data = readData($dataFile);
     $found = false;
 
     foreach ($data as &$d) {
-        if ($d["id"] == $id) {
+        if ($d["id"] === $id) {
             $found = true;
 
-            if (isset($_POST["name"]) && $_POST["name"] !== "") {
+            if ($_POST["name"] !== "") {
                 $d["name"] = $_POST["name"];
             }
-            if (isset($_POST["phone"]) && strlen($_POST["phone"]) >= 10) {
+            if ($_POST["phone"] !== "" && strlen($_POST["phone"]) >= 10) {
                 $d["phone"] = $_POST["phone"];
             }
         }
     }
 
-    if (!$found) { echo json_encode(["error"=>"ID not found"]); exit; }
+    if (!$found) {
+        echo json_encode(["error"=>"ID not found"]);
+        exit;
+    }
 
     saveData($dataFile, $data);
     echo json_encode(["success"=>true]);
@@ -205,6 +225,7 @@ if ($method === "POST" && $action === "update") {
 // DELETE
 if ($method === "POST" && $action === "delete") {
     $id = $_POST["id"] ?? "";
+
     if (!$id) { echo json_encode(["error"=>"ID required"]); exit; }
 
     $data = readData($dataFile);
@@ -212,33 +233,37 @@ if ($method === "POST" && $action === "delete") {
     $deleted = false;
 
     foreach ($data as $d) {
-        if ($d["id"] == $id) {
+        if ($d["id"] === $id) {
             $deleted = true;
             continue;
         }
         $new[] = $d;
     }
 
-    if (!$deleted) { echo json_encode(["error"=>"ID not found"]); exit; }
+    if (!$deleted) {
+        echo json_encode(["error"=>"ID not found"]);
+        exit;
+    }
 
     saveData($dataFile, $new);
     echo json_encode(["success"=>true]);
     exit;
 }
 
-// IMAGE UPLOAD
+// UPLOAD IMAGE
 if ($method === "POST" && $action === "upload-image") {
+
     if (!isset($_FILES["image"])) {
         echo json_encode(["error"=>"Image required"]);
         exit;
     }
 
-    if (!file_exists("uploads")) mkdir("uploads");
+    $fileName = time() . "_" . basename($_FILES["image"]["name"]);
+    $filePath = $uploadDir . $fileName;
 
-    $file = "uploads/" . time() . "_" . basename($_FILES["image"]["name"]);
-    move_uploaded_file($_FILES["image"]["tmp_name"], $file);
+    move_uploaded_file($_FILES["image"]["tmp_name"], $filePath);
 
-    echo json_encode(["success"=>true, "file"=>$file]);
+    echo json_encode(["success"=>true, "file"=>$filePath]);
     exit;
 }
 
