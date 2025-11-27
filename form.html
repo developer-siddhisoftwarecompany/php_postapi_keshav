@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><body>
+<h2>Create Data</h2>
+<form method="POST" action="index.php?action=create">
+ID:<input name="id"><br>
+Name:<input name="name"><br>
+Phone:<input name="phone"><br>
+<button>Create</button>
+</form>
+
+<h2>Update Data</h2>
+<form method="POST" action="index.php?action=update">
+ID:<input name="id"><br>
+Name:<input name="name"><br>
+Phone:<input name="phone"><br>
+<button>Update</button>
+</form>
+
+<h2>Delete Data</h2>
+<form method="POST" action="index.php?action=delete">
+ID:<input name="id"><br>
+<button>Delete</button>
+</form>
+
+<h2>Upload Image</h2>
+<form method="POST" action="index.php?action=upload-image" enctype="multipart/form-data">
+<input type="file" name="image"><br>
+<button>Upload</button>
+</form>
+</body></html>
