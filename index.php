@@ -22,54 +22,133 @@ $action = $_GET["action"] ?? "";
 // ======================================================
 // 0️⃣ DEFAULT PAGE – SHOW HTML FORMS
 // ======================================================
+<?php
+// ==== HOME PAGE MODERN UI ====
 if ($method === "GET" && $action === "") {
-    ?>
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>PHP JSON API Demo</title>
-    </head>
-    <body>
-        <h1>PHP JSON API (Create / Update / Delete / Upload)</h1>
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PHP API Dashboard</title>
 
-        <h2>Create Data</h2>
-        <form method="POST" action="index.php?action=create">
-            ID: <input name="id"><br><br>
-            Name: <input name="name"><br><br>
-            Phone: <input name="phone"><br><br>
-            <button type="submit">Create</button>
-        </form>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <hr>
+  <!-- Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-        <h2>Update Data</h2>
-        <form method="POST" action="index.php?action=update">
-            ID (existing): <input name="id"><br><br>
-            New Name: <input name="name"><br><br>
-            New Phone: <input name="phone"><br><br>
-            <button type="submit">Update</button>
-        </form>
+  <style>
+      body {
+          background: #f5f7fb;
+      }
+      .card {
+          border: none;
+          border-radius: 14px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      }
+      .header-title {
+          font-weight: 700;
+          color: #3b4cca;
+          text-align: center;
+          margin-bottom: 30px;
+          margin-top: 20px;
+      }
+      .btn-main {
+          background: #3b6bff;
+          color: #fff;
+          font-weight: 600;
+      }
+      .btn-main:hover {
+          background: #2d54cc;
+      }
+  </style>
+</head>
+<body>
 
-        <hr>
+<div class="container">
+    <h1 class="header-title">PHP JSON API Dashboard</h1>
 
-        <h2>Delete Data</h2>
-        <form method="POST" action="index.php?action=delete">
-            ID: <input name="id"><br><br>
-            <button type="submit">Delete</button>
-        </form>
+    <div class="row g-4">
 
-        <hr>
+        <!-- CREATE CARD -->
+        <div class="col-lg-6">
+            <div class="card p-4">
+                <h4><i class="fa fa-plus-circle text-primary"></i> Create Data</h4>
+                <form method="POST" action="index.php?action=create" class="mt-3">
 
-        <h2>Upload Image</h2>
-        <form method="POST" action="index.php?action=upload-image" enctype="multipart/form-data">
-            <input type="file" name="image"><br><br>
-            <button type="submit">Upload Image</button>
-        </form>
-    </body>
-    </html>
-    <?php
-    exit;
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" name="id" required>
+
+                    <label class="form-label mt-3">Name</label>
+                    <input type="text" class="form-control" name="name" required>
+
+                    <label class="form-label mt-3">Phone</label>
+                    <input type="text" class="form-control" name="phone" required>
+
+                    <button class="btn btn-main mt-4 w-100">Create</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- UPDATE CARD -->
+        <div class="col-lg-6">
+            <div class="card p-4">
+                <h4><i class="fa fa-edit text-warning"></i> Update Data</h4>
+                <form method="POST" action="index.php?action=update" class="mt-3">
+
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" name="id" required>
+
+                    <label class="form-label mt-3">New Name</label>
+                    <input type="text" class="form-control" name="name">
+
+                    <label class="form-label mt-3">New Phone</label>
+                    <input type="text" class="form-control" name="phone">
+
+                    <button class="btn btn-warning mt-4 w-100 text-white fw-bold">Update</button>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- DELETE CARD -->
+        <div class="col-lg-6">
+            <div class="card p-4">
+                <h4><i class="fa fa-trash text-danger"></i> Delete Data</h4>
+                <form method="POST" action="index.php?action=delete" class="mt-3">
+
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" name="id" required>
+
+                    <button class="btn btn-danger mt-4 w-100 fw-bold">Delete</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- UPLOAD IMAGE CARD -->
+        <div class="col-lg-6">
+            <div class="card p-4">
+                <h4><i class="fa fa-upload text-success"></i> Upload Image</h4>
+                <form method="POST" action="index.php?action=upload-image" enctype="multipart/form-data" class="mt-3">
+
+                    <label class="form-label">Choose Image</label>
+                    <input type="file" class="form-control" name="image" required>
+
+                    <button class="btn btn-success mt-4 w-100 fw-bold">Upload</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
+<?php
+exit;
 }
+?>
+
 
 // From here on, everything is JSON API
 header("Content-Type: application/json");
